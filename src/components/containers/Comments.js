@@ -1,54 +1,46 @@
 import React, { Component } from 'react'
-import Comment from '../presentation/Comment'
+import { CreateComment, Comment } from '../presentation'
 import styles from './styles'
+import { APIManager } from '../../utils'
 
 class Comments extends Component {
   constructor() {
     super()
     this.state = {
-      comment: {
-        username: '',
-        body: '',
-        timestamp: ''
-      },
       list: []
     }
   }
 
-  submitComment () {
-    console.log('submitComment: ' + JSON.stringify(this.state.comment))
-    let updatedList = Object.assign([], this.state.list)
-    updatedList.push(this.state.comment)
+  componentDidMount() {
+    APIManager.get('/api/comment', null, (err, response) => {
+      if (err) {
+        alert('ERROR: ' + err.message)
+        return
+      }
 
-    this.setState({
-      list: updatedList
+      this.setState({
+        list: response.results
+      })
     })
   }
 
-  updateUsername (event) {
-    let updatedComment = Object.assign({}, this.state.comment)
-    updatedComment['username'] = event.target.value
+  submitComment(comment) {
+    console.log('submitComments: ' + JSON.stringify(comment))
+    let updatedComment = Object.assign({}, comment)
 
-    this.setState({
-      comment: updatedComment
-    })
-  }
+    APIManager.post('/api/comment', updatedComment, (err, response) => {
+      if (err) {
+        alert(err)
+        return
+      }
 
-  updateBody (event) {
-    let updatedComment = Object.assign({}, this.state.comment)
-    updatedComment['body'] = event.target.value
+      console.log(JSON.stringify(response))
+      let updatedList = Object.assign([], this.state.list)
+      updatedList.push(response.result)
 
-    this.setState({
-      comment: updatedComment
-    })
-  }
-
-  updateTimeStamp (event) {
-    let updatedComment = Object.assign({}, this.state.comment)
-    updatedComment['timestamp'] = event.target.value
-
-    this.setState({
-      comment: updatedComment
+      this.setState({
+        list: updatedList
+      })
     })
   }
 
@@ -68,10 +60,7 @@ class Comments extends Component {
             {commentList}
           </ul>
 
-          <input onChange={this.updateUsername.bind(this)} className="form-control" type="text" placeholder="Username" /><br />
-          <input onChange={this.updateBody.bind(this)} className="form-control" type="text" placeholder="Comment" /><br />
-          <input onChange={this.updateTimeStamp.bind(this)} className="form-control" type="text" placeholder="Timestamp" /><br />
-          <button onClick={this.submitComment.bind(this)} className="btn btn-info">Submit Comment</button>
+          <CreateComment onCreate={this.submitComment.bind(this)} />
         </div>
       </div>
     )
